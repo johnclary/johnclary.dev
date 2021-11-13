@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>John Clary</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@700&display=swap" rel="stylesheet">
+    <style>
+      html {
+        font-family: 'Quicksand', sans-serif;
+      }
+
+      body {
+        margin: 0;
+        height: 100vh;
+        background-color: #19192e;
+        overflow: hidden;
+      }
+      header {
+        position: fixed;
+        top: 20%;
+        left: 20%;
+        z-index: 1;
+      }
+      .title {
+        color: rgb(255, 0, 191);
+      }
+      @media screen and (max-width: 768px) {
+        .title {
+          font-size: 2rem;
+        }
+      }
+
+      @media screen and (min-width: 769px) {
+        .title {
+          font-size: 4rem;
+        }
+      }
+      nav {
+        font-size: 1.5rem;
+        color: #fff;
+      }
+      canvas {
+        height: "100%";
+        width: "100%";
+        z-index: 3;
+      }
+    </style>
+  </head>
+  <body>
+    <header id="header">
+      <span class="title">JOHN CLARY</span><br />
+      <nav>
+        Github | LinkedIn
+    </header>
+    <canvas id="canvas"></canvas>
+  </body>
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@turf/turf@6/turf.min.js"></script>
+  <script src="starfield.js"></script>
+</html>
