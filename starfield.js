@@ -1,141 +1,189 @@
-const { width, height } = document.body.getBoundingClientRect();
-const isMobile = width <= 768;
-const NUM_STARS = isMobile ? 200 : 400;
-const DISTANCE = -100000; // max project distance from viewer
-const INIT_MAX_Z_VAL = 500; // largest initial poroximity of generated stars
-const ALPHA_SCALE_DOMAIN = 500;
-const Z_INCREMENT = 1;
-const FRAME_SLEEP = 40;
-const RADIUS_MAX_INIT = isMobile ? 10 : 30; // maximum star radius
-const RADIUS_INCREMENT = .02;
-const STAR_COLOR = { r: 94, g: 255, b: 137 };
-const TEXT_BOX_PADDING = 10;
-const TEXT_COLOR = { r: 255, g: 0, b: 191 };
-
-
-const textBounds = document.getElementById("header").getBoundingClientRect();
-const textBbox = turf.bboxPolygon([
-  textBounds.left - TEXT_BOX_PADDING,
-  textBounds.top - TEXT_BOX_PADDING,
-  textBounds.right + TEXT_BOX_PADDING,
-  textBounds.bottom,
-]);
-
-const starIntersects = ({ x, y }) => {
-  const point = turf.point([x, y]);
-  return turf.booleanContains(textBbox, point);
+// Configuration
+const CONFIG = {
+  NUM_STARS: window.innerWidth <= 768 ? 200 : 400,
+  DISTANCE: -100000,
+  INIT_MAX_Z: 500,
+  ALPHA_SCALE_DOMAIN: 500,
+  Z_INCREMENT: 1,
+  FRAME_SLEEP: 40,
+  RADIUS_MAX_INIT: window.innerWidth <= 768 ? 10 : 30,
+  RADIUS_INCREMENT: 0.02,
+  TEXT_BOX_PADDING: 10,
+  COLORS: {
+    STAR: { r: 94, g: 255, b: 137 },
+    TEXT: { r: 255, g: 0, b: 191 },
+  },
 };
 
-function reProject(star) {
-  // see: https://math.stackexchange.com/questions/2337183/one-point-perspective-formula
-  const x = star.x * (DISTANCE / (star.z + DISTANCE));
-  const y = star.y * (DISTANCE / (star.z + DISTANCE));
-  return { x: x, y: y };
-}
+class StarfieldAnimation {
+  constructor() {
+    this.initializeCanvas();
+    this.initializeTextBounds();
+    this.initializeScales();
+    this.stars = this.createStarArray();
+    this.then = performance.now();
+    this.colorCache = new Map();
+  }
 
-function applyOffset(star, xOffset, yOffset) {
-  return { x: star.x + xOffset, y: yOffset - star.y };
-}
+  initializeCanvas() {
+    const { width, height } = document.body.getBoundingClientRect();
+    this.width = width;
+    this.height = height;
 
-function adjustStars(stars, width, height) {
-  const alphaScale = d3
-    .scaleLinear()
-    .domain([0, ALPHA_SCALE_DOMAIN])
-    .range([0, 1]);
+    this.canvas = d3
+      .select("canvas")
+      .attr("height", height)
+      .attr("width", width);
+    this.context = this.canvas.node().getContext("2d");
+  }
 
-  return stars.map(function (star, i) {
-    let newStar;
+  initializeTextBounds() {
+    const textBounds = document
+      .getElementById("header")
+      .getBoundingClientRect();
+    this.textBbox = turf.bboxPolygon([
+      textBounds.left - CONFIG.TEXT_BOX_PADDING,
+      textBounds.top - CONFIG.TEXT_BOX_PADDING,
+      textBounds.right + CONFIG.TEXT_BOX_PADDING,
+      textBounds.bottom,
+    ]);
+  }
 
-    if (
-      Math.abs(star.x) > width / 2 + RADIUS_MAX_INIT ||
-      Math.abs(star.y) > height / 2 + RADIUS_MAX_INIT
-    ) {
-      //  remove stars that have moved offscreen and replace with a new random one
-      newStar = randomStar();
-      star.r = newStar.r;
-      star.z = newStar.z;
-      star.label = newStar.label;
-      star.id = i;
-      star.intersected = false;
-    } else {
-      star.z += Z_INCREMENT;
-      newStar = reProject(star);
-      star.r += RADIUS_INCREMENT
+  initializeScales() {
+    this.alphaScale = d3
+      .scaleLinear()
+      .domain([0, CONFIG.ALPHA_SCALE_DOMAIN])
+      .range([0, 1]);
+  }
+
+  createStarArray() {
+    return Array.from({ length: CONFIG.NUM_STARS }, (_, i) => ({
+      ...this.createRandomStar(true),
+      id: i,
+      intersected: false,
+    }));
+  }
+
+  createRandomStar(init = false) {
+    const x = Math.floor(Math.random() * (this.width / 2)) * this.randomSign();
+    const y = Math.floor(Math.random() * (this.height / 2)) * this.randomSign();
+    const r = Math.random() * CONFIG.RADIUS_MAX_INIT;
+    const z = init ? Math.random() * CONFIG.INIT_MAX_Z : 0;
+
+    return { x, y, r, z };
+  }
+
+  randomSign() {
+    return Math.random() < 0.5 ? -1 : 1;
+  }
+
+  projectStar(star) {
+    const perspective = CONFIG.DISTANCE / (star.z + CONFIG.DISTANCE);
+    return {
+      x: star.x * perspective,
+      y: star.y * perspective,
+    };
+  }
+
+  applyCanvasOffset(star) {
+    return {
+      x: star.x + this.width / 2,
+      y: this.height / 2 - star.y,
+    };
+  }
+
+  isStarIntersecting(screenPos) {
+    const point = turf.point([screenPos.x, screenPos.y]);
+    return turf.booleanContains(this.textBbox, point);
+  }
+
+  isStarOffscreen(star) {
+    const margin = CONFIG.RADIUS_MAX_INIT;
+    return (
+      Math.abs(star.x) > this.width / 2 + margin ||
+      Math.abs(star.y) > this.height / 2 + margin
+    );
+  }
+
+  getStarColor(isIntersected, alpha) {
+    const color = isIntersected ? CONFIG.COLORS.TEXT : CONFIG.COLORS.STAR;
+    const key = `${color.r},${color.g},${color.b},${alpha}`;
+
+    if (!this.colorCache.has(key)) {
+      this.colorCache.set(
+        key,
+        `rgba(${color.r}, ${color.g}, ${color.b}, ${alpha})`
+      );
     }
 
-    star.x = newStar.x;
-    star.y = newStar.y;
-    star.a = alphaScale(star.z);
-    return star;
-  });
-}
-
-function plusOrMinus() {
-  // return 1 or -1
-  return Math.random() < 0.5 ? -1 : 1;
-}
-
-function randomStar(init) {
-  const xMult = plusOrMinus();
-  const yMult = plusOrMinus();
-  const x = Math.floor(Math.random() * (width / 2)) * xMult;
-  const y = Math.floor(Math.random() * (height / 2)) * yMult;
-  const r = Math.random() * RADIUS_MAX_INIT;
-  // we set a large random swath of z vals on the init (otherwise it would take a while for stars to come into view)
-  const z = init ? Math.random() * INIT_MAX_Z_VAL : 0;
-  return { x: x, y: y, r: r, z: z };
-}
-
-function starArray() {
-  let stars = new Array(NUM_STARS);
-  for (let i = 0; i < NUM_STARS; i++) {
-    stars[i] = this.randomStar(true);
-    stars[i].i = i;
-  }
-  return stars;
-}
-
-const canvas = d3.select("canvas").attr("height", height).attr("width", width);
-const context = canvas.node().getContext("2d");
-let then = window.performance.now();
-let stars = starArray();
-
-const main = () => {
-  let now = window.performance.now();
-  const elapsed = now - then;
-  if (elapsed < FRAME_SLEEP) {
-    window.requestAnimationFrame(main);
-    return;
+    return this.colorCache.get(key);
   }
 
-  context.clearRect(0, 0, width, height);
+  updateStars() {
+    this.stars.forEach((star, i) => {
+      // Move star forward
+      star.z += CONFIG.Z_INCREMENT;
+      star.r += CONFIG.RADIUS_INCREMENT;
 
-  stars = adjustStars(stars, width, height);
-  
-  stars.forEach((star) => {
-    let offset = applyOffset(star, width / 2, height / 2);
-    star.intersected = star.intersected ? true : starIntersects(offset);
-    if (star.r > 1) {
-      // coordinates are stored as if on a plane w/ center origin (0,0)
-      // we adjust them here for a plane whose origin is top left with (minWidth, minHeight)
-      context.strokeStyle = `rgba(${STAR_COLOR.r},${STAR_COLOR.g},${STAR_COLOR.b},${star.a} )`;
-      if (star.intersected) {
-        context.strokeStyle = `rgba(${TEXT_COLOR.r},${TEXT_COLOR.g},${TEXT_COLOR.b},${star.a} )`;
+      // Reset offscreen stars
+      if (this.isStarOffscreen(star)) {
+        const newStar = this.createRandomStar(false);
+        Object.assign(star, newStar, {
+          id: i,
+          intersected: false,
+        });
+      } else {
+        // Project to screen coordinates
+        const projected = this.projectStar(star);
+        star.x = projected.x;
+        star.y = projected.y;
       }
-      context.beginPath();
-      context.arc(offset.x, offset.y, star.r, 0, 2 * Math.PI);
-      context.stroke();
-    } else {
-      // save some cpu and traw tiny rects instead of tiny circles
-      context.fillStyle = "rgba(" + STAR_COLOR + ", " + star.a + ")";
-      context.fillRect(offset.x, offset.y, 1, 1);
+
+      // Update alpha and intersection status
+      star.alpha = this.alphaScale(star.z);
+      const screenPos = this.applyCanvasOffset(star);
+      star.intersected = star.intersected || this.isStarIntersecting(screenPos);
+    });
+  }
+
+  renderStars() {
+    this.stars.forEach((star) => {
+      if (star.r <= 1) return; // Skip tiny stars
+
+      const screenPos = this.applyCanvasOffset(star);
+      const color = this.getStarColor(star.intersected, star.alpha);
+
+      this.context.strokeStyle = color;
+      this.context.beginPath();
+      this.context.arc(screenPos.x, screenPos.y, star.r, 0, 2 * Math.PI);
+      this.context.stroke();
+    });
+  }
+
+  animate() {
+    const now = performance.now();
+    const elapsed = now - this.then;
+
+    if (elapsed < CONFIG.FRAME_SLEEP) {
+      requestAnimationFrame(() => this.animate());
+      return;
     }
-    star.r = star.r + 0.02;
-  });
 
+    // Clear and update
+    this.context.clearRect(0, 0, this.width, this.height);
+    this.updateStars();
+    this.renderStars();
 
-  then = now - (elapsed % FRAME_SLEEP);
-  window.requestAnimationFrame(main);
-};
+    // Prepare for next frame
+    this.then = now - (elapsed % CONFIG.FRAME_SLEEP);
+    requestAnimationFrame(() => this.animate());
+  }
 
-window.requestAnimationFrame(main);
+  start() {
+    this.animate();
+  }
+}
+
+// Initialize and start the animation
+const starfield = new StarfieldAnimation();
+starfield.start();
