@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- HTML Meta Tags -->
+    <title>John Clary: Software Developer in Austin, TX</title>
+    <meta name="description" content="John Clary's website">
+
+    <!-- Google / Search Engine Tags -->
+    <meta itemprop="name" content="John Clary: Software Developer in Austin, TX">
+    <meta itemprop="description" content="John Clary's website">
+    <meta itemprop="image" content="">
+
+    <!-- Facebook Meta Tags -->
+    <meta property="og:url" content="https://johnclary.dev">
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="John Clary: Software Developer in Austin, TX">
+    <meta property="og:description" content="John Clary's website">
+    <meta property="og:image" content="">
+
+    <!-- Twitter Meta Tags -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="John Clary: Software Developer in Austin, TX">
+    <meta name="twitter:description" content="John Clary's website">
+    <meta name="twitter:image" content="">
+
+    <!-- Meta Tags Generated via http://heymeta.com -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://fonts.bunny.net">
+    <link href="https://fonts.bunny.net/css?family=sumana:400,700" rel="stylesheet" />
+    <style>
+      html {
+        font-family: 'Sumana', serif;
+      }
+
+      body {
+        margin: 0;
+        height: 100vh;
+        background-color: #19192e;
+        overflow: hidden;
+      }
+      header {
+        position: fixed;
+        top: 20%;
+        left: 20%;
+        z-index: 1;
+      }
+      .title {
+        color: rgb(255, 0, 191);
+      }
+      @media screen and (max-width: 768px) {
+        .title {
+          font-size: 2rem;
+        }
+      }
+
+      @media screen and (min-width: 769px) {
+        .title {
+          font-size: 4rem;
+        }
+      }
+      nav {
+        font-size: 1.5rem;
+        color: #fff;
+      }
+      canvas {
+        height: "100%";
+        width: "100%";
+        z-index: 3;
+      }
+    </style>
+  </head>
+  <body>
+    <header id="header">
+      <span class="title">JOHN CLARY</span><br />
+      <nav>
+        Github | LinkedIn
+    </header>
+    <canvas id="canvas"></canvas>
+  </body>
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@turf/turf@6/turf.min.js"></script>
+  <script src="mapfield.js"></script>
+</html>
