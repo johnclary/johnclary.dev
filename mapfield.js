@@ -1,41 +1,38 @@
-// Configuration
 const CONFIG = {
-  DISTANCE: -10000,
-  INIT_MAX_Z: 400,
-  ALPHA_SCALE_DOMAIN: 2500,
-  Z_INCREMENT: 3,
+  DISTANCE: 10000,
+  Z_SPAWN_MIN: 5000, // how close (in z) a shape can spawn to its arrival point
+  Z_SPAWN_MAX: 9000, // how far a shape can spawn — together these set flight duration variety
+  Z_INCREMENT: 10, // flight speed toward the vanishing point
   FRAME_SLEEP: 10,
-  DOCK_START_MIN: 0.05,
-  DOCK_START_MAX: 0.5,
-  DOCK_TRIGGER_DISTANCE: 5, // screen px to target that triggers docking
-  DOCK_DURATION_FRAMES: 10, // fixed duration, per-piece chaos
-  DOCK_PROBABILITY: 0.75, // chance a shape is willDock at spawn
+  ALPHA_FADE_Z: 5000, // remaining z-distance over which alpha fades in
+  COLOR_TRANSITION_Z: 1000, // remaining z-distance over which color/lineWidth fade
+  DOCKED_SCALE: 1, // don't want to edit actually -  final zoom every docked shape settles to - don'
+  DOCK_PROBABILITY: 1,
   COLORS: {
-    // INFLIGHT: {r: 255, g: 0, b: 191},
     INFLIGHT: { r: 94, g: 255, b: 137 },
     DOCKED: { r: 94, g: 255, b: 137 },
+    // DOCKED: { r: 255, g: 0, b: 191 }, // fuscia
   },
   LINE_WIDTH: {
-    INFLIGHT: 0.5,
-    DOCKED: 2,
+    INFLIGHT: .5,
+    DOCKED: .9,
   },
+  BORDER_MARGIN: 50, // make negative to inset map
+  ZOOM: 1, // optional zoom setting applied to the entire map
 };
-
-// ---- Easing ----
-function easeOutCubic(t) {
-  return 1 - Math.pow(1 - t, 3);
-}
 
 function lerp(a, b, t) {
   return a + (b - a) * t;
 }
-
 function lerpColor(c1, c2, t) {
   return {
     r: lerp(c1.r, c2.r, t),
     g: lerp(c1.g, c2.g, t),
     b: lerp(c1.b, c2.b, t),
   };
+}
+function clamp01(t) {
+  return Math.max(0, Math.min(1, t));
 }
 
 // ---- Geometry preprocessing ----
@@ -116,7 +113,10 @@ class AnimatedShape {
     this.dockX = shapeData.dockX;
     this.dockY = shapeData.dockY;
     this.relativeRings = shapeData.relativeRings;
-    this.bounds = bounds; // { width, height } for spawn/offscreen logic
+    this.bounds = bounds;
+
+    // Exact z at which perspective(z) === DOCKED_SCALE.
+    this.zFinal = CONFIG.DISTANCE * (1 / CONFIG.DOCKED_SCALE - 1);
 
     this.respawn();
   }
@@ -125,125 +125,79 @@ class AnimatedShape {
     this.willDock = Math.random() < CONFIG.DOCK_PROBABILITY;
     this.phase = "inflight";
 
-    if (this.willDock) {
-      // Stay on the ray toward this shape's real dock position (correct
-      // direction), but randomize how far out it starts along that ray
-      // for spawn/timing variety.
-      const k =
-        CONFIG.DOCK_START_MIN +
-        Math.random() * (CONFIG.DOCK_START_MAX - CONFIG.DOCK_START_MIN);
-      this.originX = this.dockX * k;
-      this.originY = this.dockY * k;
-    } else {
-      // Passthrough shapes: fully random direction, unrelated to any
-      // dock target — this is the "floating past" look.
-      this.originX =
-        Math.floor(Math.random() * (this.bounds.width / 2)) * this.randomSign();
-      this.originY =
-        Math.floor(Math.random() * (this.bounds.height / 2)) *
-        this.randomSign();
-    }
+    this.originX = this.dockX / CONFIG.DOCKED_SCALE;
+    this.originY = this.dockY / CONFIG.DOCKED_SCALE;
+
+    // Random starting depth - trajectory converges on the same zFinal regardless of start.
+    this.z =
+      this.zFinal +
+      CONFIG.Z_SPAWN_MIN +
+      Math.random() * (CONFIG.Z_SPAWN_MAX - CONFIG.Z_SPAWN_MIN);
 
     this.x = this.originX;
     this.y = this.originY;
-    this.prevX = this.originX;
-    this.prevY = this.originY;
-
-    this.z = Math.random() * CONFIG.INIT_MAX_Z;
     this.scale = 1;
     this.alpha = 0;
-
-    this.dockFrame = 0;
-    this.frozen = null;
-    this.prevDistToDock = Infinity;
+    this.currentColor = CONFIG.COLORS.INFLIGHT;
+    this.currentLineWidth = CONFIG.LINE_WIDTH.INFLIGHT;
   }
-
-  //   central origin
-  //   respawn() {
-  //     const START_FRACTION = 0.02; // spawn near center, along the ray toward this shape's dock position
-  //     this.originX = this.dockX * START_FRACTION;
-  //     this.originY = this.dockY * START_FRACTION;
-  //     this.x = this.originX;
-  //     this.y = this.originY;
-  //     this.z = Math.random() * CONFIG.INIT_MAX_Z;
-  //     this.scale = 1;
-  //     this.alpha = 0;
-
-  //     this.willDock = Math.random() < CONFIG.DOCK_PROBABILITY;
-  //     this.phase = "inflight";
-
-  //     this.dockFrame = 0;
-  //     this.frozen = null;
-  //   }
-
-  //   respawn() {
-  //     this.originX =
-  //       Math.floor(Math.random() * (this.bounds.width / 2)) * this.randomSign();
-  //     this.originY =
-  //       Math.floor(Math.random() * (this.bounds.height / 2)) * this.randomSign();
-  //     this.x = this.originX;
-  //     this.y = this.originY;
-  //     this.z = Math.random() * CONFIG.INIT_MAX_Z;
-  //     this.scale = 1;
-  //     this.alpha = 0;
-
-  //     this.willDock = Math.random() < CONFIG.DOCK_PROBABILITY;
-  //     this.phase = "inflight";
-
-  //     // Populated at trigger time
-  //     this.dockFrame = 0;
-  //     this.frozen = null;
-  //   }
 
   randomSign() {
     return Math.random() < 0.5 ? -1 : 1;
   }
 
-  projectInflight() {
+  update() {
+    if (this.phase === "docked") {
+      return;
+    }
+
+    this.z -= CONFIG.Z_INCREMENT;
+
+    if (this.willDock && this.z <= this.zFinal) {
+      this.z = this.zFinal;
+      this.x = this.dockX;
+      this.y = this.dockY;
+      this.scale = CONFIG.DOCKED_SCALE;
+      this.alpha = 1;
+      this.currentColor = CONFIG.COLORS.DOCKED;
+      this.currentLineWidth = CONFIG.LINE_WIDTH.DOCKED;
+      this.phase = "docked";
+      return;
+    }
+
     const perspective = CONFIG.DISTANCE / (this.z + CONFIG.DISTANCE);
     this.x = this.originX * perspective;
     this.y = this.originY * perspective;
     this.scale = perspective;
-    this.alpha = Math.min(1, this.z / CONFIG.ALPHA_SCALE_DOMAIN);
-  }
 
-  triggerDocking(freezeX = this.x, freezeY = this.y) {
-    this.phase = "docking";
-    this.dockFrame = 0;
-    this.frozen = {
-      x: freezeX,
-      y: freezeY,
-      scale: this.scale,
-      color: { ...CONFIG.COLORS.INFLIGHT },
-      lineWidth: CONFIG.LINE_WIDTH.INFLIGHT,
-    };
-  }
+    // Alpha fades in as remaining distance to arrival shrinks.
+    // remaining = 0 at arrival -> alpha = 1
+    // remaining >= ALPHA_FADE_Z -> alpha = 0
+    const remaining = this.z - this.zFinal;
+    this.alpha = 1 - clamp01(remaining / CONFIG.ALPHA_FADE_Z);
 
-  updateDocking() {
-    this.dockFrame += 1;
-    const t = Math.min(1, this.dockFrame / CONFIG.DOCK_DURATION_FRAMES);
-    const eased = easeOutCubic(t);
-
-    this.x = lerp(this.frozen.x, this.dockX, eased);
-    this.y = lerp(this.frozen.y, this.dockY, eased);
-    this.scale = lerp(this.frozen.scale, 1, eased);
-    this.currentColor = lerpColor(
-      this.frozen.color,
-      CONFIG.COLORS.DOCKED,
-      eased,
-    );
-    this.currentLineWidth = lerp(
-      this.frozen.lineWidth,
-      CONFIG.LINE_WIDTH.DOCKED,
-      eased,
-    );
-
-    if (t >= 1) {
-      this.phase = "docked";
+    if (this.willDock) {
+      const colorT = 1 - clamp01(remaining / CONFIG.COLOR_TRANSITION_Z);
+      this.currentColor = lerpColor(
+        CONFIG.COLORS.INFLIGHT,
+        CONFIG.COLORS.DOCKED,
+        colorT,
+      );
+      this.currentLineWidth = lerp(
+        CONFIG.LINE_WIDTH.INFLIGHT,
+        CONFIG.LINE_WIDTH.DOCKED,
+        colorT,
+      );
+    } else {
+      // Passthrough shapes have no zFinal target — fall back to a fixed
+      // reference distance so they still fade in sensibly. Reusing
+      // ALPHA_FADE_Z against raw z (relative to CONFIG.DISTANCE's zero point)
+      // approximates the old behavior.
+      this.alpha = clamp01(1 - this.z / CONFIG.ALPHA_FADE_Z);
     }
   }
 
-  isOffscreen(width, height, margin = 50) {
+  isOffscreen(width, height, margin = CONFIG.BORDER_MARGIN) {
     return (
       Math.abs(this.x) > width / 2 + margin ||
       Math.abs(this.y) > height / 2 + margin
@@ -259,33 +213,21 @@ class MapAssemblyAnimation {
       .geoIdentity()
       .reflectY(true)
       .fitSize([this.width, this.height], geojson);
-    // const projection = d3
-    //   .geoMercator()
-    //   .fitSize([this.width, this.height], geojson);
 
-    console.log({
-      "scale:": projection.scale(),
-      "translate:": projection.translate(),
-    });
     const projectFn = (lonLat) => projection(lonLat);
 
     const preprocessor = new GeometryPreprocessor(projectFn);
 
     const shapeDataList = preprocessor.flattenFeatureCollection(geojson);
 
-    // this.shapes = shapeDataList.map(
-    //   (shapeData, i) =>
-    //     new AnimatedShape(shapeData, i, {
-    //       width: this.width,
-    //       height: this.height,
-    //     }),
-    // );
-
     this.shapes = shapeDataList.map((shapeData, i) => {
       const worldShapeData = {
         ...shapeData,
-        dockX: shapeData.dockX - this.width / 2,
-        dockY: this.height / 2 - shapeData.dockY,
+        dockX: (shapeData.dockX - this.width / 2) * CONFIG.ZOOM,
+        dockY: (this.height / 2 - shapeData.dockY) * CONFIG.ZOOM,
+        relativeRings: shapeData.relativeRings.map((ring) =>
+          ring.map(([x, y]) => [x * CONFIG.ZOOM, y * CONFIG.ZOOM]),
+        ),
       };
       return new AnimatedShape(worldShapeData, i, {
         width: this.width,
@@ -317,57 +259,29 @@ class MapAssemblyAnimation {
 
   updateShapes() {
     for (const shape of this.shapes) {
-      if (shape.phase === "inflight") {
-        const prevX = shape.x;
-        const prevY = shape.y;
-
-        shape.z += CONFIG.Z_INCREMENT;
-        shape.projectInflight();
-
-        if (shape.isOffscreen(this.width, this.height)) {
-          shape.respawn();
-          continue;
-        }
-
-        if (shape.willDock) {
-          const dist = Math.sqrt(
-            (shape.x - shape.dockX) ** 2 + (shape.y - shape.dockY) ** 2,
-          );
-          const passedClosestApproach = dist > shape.prevDistToDock;
-
-          if (passedClosestApproach) {
-            // Freeze at last frame's position — still approaching, not overshot —
-            // so the ease-in only ever moves the shape forward toward dock.
-            shape.triggerDocking(prevX, prevY);
-          } else if (dist <= CONFIG.DOCK_TRIGGER_DISTANCE) {
-            shape.triggerDocking(shape.x, shape.y);
-          }
-          shape.prevDistToDock = dist;
-        }
-      } else if (shape.phase === "docking") {
-        shape.updateDocking();
+      if (shape.phase === "docked") {
+        // console.log("SHAPE", shape);
+        // debugger;
+        continue;
+      }
+      shape.update();
+      if (
+        shape.phase !== "docked" &&
+        shape.isOffscreen(this.width, this.height)
+      ) {
+        shape.respawn();
       }
     }
   }
 
   renderShapes() {
     for (const shape of this.shapes) {
-      const isDocked = shape.phase === "docked";
-      const color = isDocked
-        ? CONFIG.COLORS.DOCKED
-        : shape.currentColor || CONFIG.COLORS.INFLIGHT;
-      const lineWidth = isDocked
-        ? CONFIG.LINE_WIDTH.DOCKED
-        : shape.currentLineWidth || CONFIG.LINE_WIDTH.INFLIGHT;
-      const alpha = shape.phase === "inflight" ? shape.alpha : 1;
-
-      this.context.strokeStyle = `rgba(${color.r}, ${color.g}, ${color.b}, ${alpha})`;
-      this.context.lineWidth = lineWidth;
+      const alpha = shape.phase === "docked" ? 1 : shape.alpha;
+      this.context.strokeStyle = `rgba(${shape.currentColor.r}, ${shape.currentColor.g}, ${shape.currentColor.b}, ${alpha})`;
+      this.context.lineWidth = shape.currentLineWidth;
 
       const originScreen = this.applyCanvasOffset(shape.x, shape.y);
-
       this.context.beginPath();
-
       for (const ring of shape.relativeRings) {
         ring.forEach(([dx, dy], i) => {
           const px = originScreen.x + dx * shape.scale;
@@ -402,7 +316,11 @@ class MapAssemblyAnimation {
     this.animate();
   }
 }
+
 const file = "./data/nyc_precision_filtered_clipped_polygons_wgs84.json";
+
+// just bedsty
+// const file = "./data/smallsty.json";
 
 async function loadData(file) {
   try {
@@ -419,7 +337,7 @@ async function loadData(file) {
 loadData(file).then((geojson) => {
   const smallGeojson = {
     ...geojson,
-    geometries: geojson.geometries.slice(500, 2000),
+    geometries: geojson.geometries,
   };
 
   const app = new MapAssemblyAnimation("canvas", smallGeojson);
