@@ -23,9 +23,7 @@
       content="John Clary: Software Developer in Austin, TX"
     />
     <meta property="og:description" content="John Clary's website" />
-    <meta property="og:image" content="" />
-
-    <!-- Twitter Meta Tags -->
+    <meta property="og:image" content="John Clary's website" />
     <meta name="twitter:card" content="summary_large_image" />
     <meta
       name="twitter:title"
@@ -33,10 +31,6 @@
     />
     <meta name="twitter:description" content="John Clary's website" />
     <meta name="twitter:image" content="" />
-
-    <!-- Meta Tags Generated via http://heymeta.com -->
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link rel="preconnect" href="https://fonts.bunny.net" />
     <link
       href="https://fonts.bunny.net/css?family=sumana:400,700"
@@ -47,6 +41,9 @@
       href="https://fonts.bunny.net/css?family=sometype-mono:700|sumana:400,700"
       rel="stylesheet"
     />
+    <link rel="icon" href="/assets/favicon.ico" sizes="32x32" />
+    <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png" />
     <style>
       html {
         font-family: "Sometype Mono", monospace;
@@ -67,7 +64,7 @@
         z-index: 1;
       }
 
-      .text-half {
+      .content {
         top: 0px;
         bottom: 0px;
         position: fixed;
@@ -82,7 +79,6 @@
       }
 
       .title {
-        /* color: rgb(255, 0, 191); */
         color: rgb(255, 255, 255);
       }
       @media screen and (max-width: 768px) {
@@ -92,10 +88,10 @@
         canvas {
           display: none;
         }
-        .text-half {
+        .content {
           position: relative;
           padding: 10px;
-          width: 90%
+          width: 90%;
         }
       }
 
@@ -127,11 +123,11 @@
     </style>
   </head>
   <body>
-    <div class="text-half">
+    <div class="content">
       <h1 class="title" style="margin-bottom: 0px">JOHN CLARY</h1>
 
       <span
-        >I am a civic technologist with deep roots in transportation data,
+        >I am a civic technologist with expertise in transportation data,
         geospatial systems, and open government.</span
       >
       <nav>
