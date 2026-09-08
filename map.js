@@ -101,7 +101,8 @@ class MapRenderer {
   }
 
   initializeCanvas(selector) {
-    const { width, height } = document.body.getBoundingClientRect();
+    const width = window.innerWidth;
+    const height = window.innerHeight;
     this.width = width;
     this.height = height;
 
