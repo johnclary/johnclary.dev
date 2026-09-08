@@ -1,5 +1,5 @@
 <!doctype html>
-<html>
+<html lang="en">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -13,7 +13,6 @@
       content="John Clary: Software Developer in Austin, TX"
     />
     <meta itemprop="description" content="John Clary's website" />
-    <meta itemprop="image" content="" />
 
     <!-- Facebook Meta Tags -->
     <meta property="og:url" content="https://johnclary.dev" />
@@ -23,19 +22,12 @@
       content="John Clary: Software Developer in Austin, TX"
     />
     <meta property="og:description" content="John Clary's website" />
-    <meta property="og:image" content="John Clary's website" />
     <meta name="twitter:card" content="summary_large_image" />
     <meta
       name="twitter:title"
       content="John Clary: Software Developer in Austin, TX"
     />
     <meta name="twitter:description" content="John Clary's website" />
-    <meta name="twitter:image" content="" />
-    <link rel="preconnect" href="https://fonts.bunny.net" />
-    <link
-      href="https://fonts.bunny.net/css?family=sumana:400,700"
-      rel="stylesheet"
-    />
     <link rel="preconnect" href="https://fonts.bunny.net" />
     <link
       href="https://fonts.bunny.net/css?family=sometype-mono:700|sumana:400,700"
@@ -47,31 +39,23 @@
     <style>
       html {
         font-family: "Sometype Mono", monospace;
-        /* font-family: 'Sumana', serif; */
       }
 
       body {
         margin: 0;
         padding: 0;
         height: 100vh;
-        background-color: #028d42;
+        background-color: #028840;
         overflow: hidden;
-      }
-      header {
-        position: fixed;
-        top: 20%;
-        left: 20%;
-        z-index: 1;
       }
 
       .content {
         top: 0px;
         bottom: 0px;
         position: fixed;
-        background-color: rgba(2, 141, 66, 1);
+        background-color: rgba(2, 136, 64, 1);
         width: 30%;
         color: white;
-        /* padding: 10px; */
         z-index: 5;
         padding-top: 200px;
         padding-left: 100px;
@@ -105,8 +89,6 @@
       }
       canvas {
         position: fixed;
-        height: "100%";
-        width: "100%";
         z-index: 3;
       }
 
@@ -136,8 +118,8 @@
       </nav>
     </div>
     <canvas id="canvas"></canvas>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@turf/turf@6/turf.min.js"></script>
+    <script src="map.js"></script>
   </body>
-  <script src="https://d3js.org/d3.v7.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@turf/turf@6/turf.min.js"></script>
-  <script src="map.js"></script>
 </html>
