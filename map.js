@@ -74,20 +74,24 @@ class GeometryPreprocessor {
 
 class MapRenderer {
   constructor(canvasSelector, geojson) {
+    this.geojson = geojson;
     this.initializeCanvas(canvasSelector);
+    this.computeShapes();
+  }
 
+  computeShapes() {
     const projection = d3
       .geoIdentity()
       .reflectY(true)
       .fitSize(
         [this.width + CONFIG.X_OFFSET, this.height + CONFIG.Y_OFFSET],
-        geojson,
+        this.geojson,
       );
 
     const projectFn = (lonLat) => projection(lonLat);
 
     const preprocessor = new GeometryPreprocessor(projectFn);
-    const shapeDataList = preprocessor.flattenFeatureCollection(geojson);
+    const shapeDataList = preprocessor.flattenFeatureCollection(this.geojson);
 
     this.shapes = shapeDataList.map((shapeData) => ({
       ...shapeData,
@@ -111,6 +115,14 @@ class MapRenderer {
       .attr("height", height)
       .attr("width", width);
     this.context = this.canvas.node().getContext("2d");
+  }
+
+  resize() {
+    this.width = window.innerWidth;
+    this.height = window.innerHeight;
+    this.canvas.attr("height", this.height).attr("width", this.width);
+    this.computeShapes();
+    this.render();
   }
 
   applyCanvasOffset(x, y) {
@@ -166,4 +178,10 @@ loadData(file).then((geojson) => {
 
   const app = new MapRenderer("canvas", smallGeojson);
   app.render();
+
+  let resizeTimeout;
+  window.addEventListener("resize", () => {
+    clearTimeout(resizeTimeout);
+    resizeTimeout = setTimeout(() => app.resize(), 150);
+  });
 });
