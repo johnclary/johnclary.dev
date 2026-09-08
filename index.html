@@ -97,28 +97,39 @@
         }
       }
       nav {
-        font-size: 1.5rem;
-        color: #fff;
-        padding-bottom: 10px;
+        padding-top: 10px;
       }
       canvas {
         position: fixed;
         height: "100%";
         width: "100%";
-        /* top: -200px; */
-        /* left: 800px; */
         z-index: 3;
+      }
+
+      a:hover,
+      a:focus {
+        color: #fff;
+        text-decoration-color: #fff;
+      }
+
+      a {
+        color: #ffcf40;
+        text-decoration-color: #ffcf40;
       }
     </style>
   </head>
   <body>
     <div class="text-half">
-      <span class="title">JOHN CLARY</span>
-      <nav>Github | LinkedIn</nav>
+      <h1 class="title" style="margin-bottom: 0px;">JOHN CLARY</h1>
+
       <span
         >Civic technologist with deep roots in transportation data, geospatial
         systems, and open government.</span
       >
+      <nav>
+        <a href="https://github.com/johnclary">Github</a> |
+        <a href="https://www.linkedin.com/in/john-clary-93469aa0">LinkedIn</a>
+      </nav>
     </div>
     <canvas id="canvas"></canvas>
   </body>
