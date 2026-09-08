@@ -1,7 +1,6 @@
 const COLORS = {
-  bikePaint: { r: 2, g: 141, b: 66 }, // "#028d42",
-  lightGreen: { r: 94, g: 255, b: 137 }, // #5eff89
-  fuscia: { r: 255, g: 0, b: 191 }, // fuscia
+  bikePaint: { r: 2, g: 141, b: 66 },
+  fuscia: { r: 255, g: 0, b: 191 },
   white: { r: 255, g: 255, b: 255 },
 };
 
@@ -13,10 +12,6 @@ const CONFIG = {
   Y_OFFSET: -20, // adjust the viewport size passed to the map projection
 };
 
-// ---- Geometry preprocessing ----
-// Flattens Polygon/MultiPolygon/LineString/MultiLineString features into a
-// flat list of independent shapes: { points: [[x,y], ...], isClosed }
-// Lines carry isClosed: false so they render as open paths.
 class GeometryPreprocessor {
   constructor(projectFn) {
     // projectFn: ([lon, lat]) => [screenX, screenY]
@@ -70,12 +65,13 @@ class GeometryPreprocessor {
   }
 
   buildShape(ringsLonLat, isClosed) {
-    const rings = ringsLonLat.map((ring) => ring.map((coord) => this.project(coord)));
+    const rings = ringsLonLat.map((ring) =>
+      ring.map((coord) => this.project(coord)),
+    );
     return { rings, isClosed };
   }
 }
 
-// ---- Static map renderer ----
 class MapRenderer {
   constructor(canvasSelector, geojson) {
     this.initializeCanvas(canvasSelector);
@@ -159,7 +155,7 @@ async function loadData(file) {
 
 loadData(file).then((geojson) => {
   const features = geojson.features.filter(
-    (f) => f.properties.Feat_Type !== "Infrastructure",
+    (f) => f.properties.Feat_Type !== "z",
   );
 
   const smallGeojson = {
