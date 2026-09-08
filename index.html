@@ -1,43 +1,63 @@
-<!DOCTYPE html>
+<!doctype html>
 <html>
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <!-- HTML Meta Tags -->
     <title>John Clary: Software Developer in Austin, TX</title>
-    <meta name="description" content="John Clary's website">
+    <meta name="description" content="John Clary's website" />
 
     <!-- Google / Search Engine Tags -->
-    <meta itemprop="name" content="John Clary: Software Developer in Austin, TX">
-    <meta itemprop="description" content="John Clary's website">
-    <meta itemprop="image" content="">
+    <meta
+      itemprop="name"
+      content="John Clary: Software Developer in Austin, TX"
+    />
+    <meta itemprop="description" content="John Clary's website" />
+    <meta itemprop="image" content="" />
 
     <!-- Facebook Meta Tags -->
-    <meta property="og:url" content="https://johnclary.dev">
-    <meta property="og:type" content="website">
-    <meta property="og:title" content="John Clary: Software Developer in Austin, TX">
-    <meta property="og:description" content="John Clary's website">
-    <meta property="og:image" content="">
+    <meta property="og:url" content="https://johnclary.dev" />
+    <meta property="og:type" content="website" />
+    <meta
+      property="og:title"
+      content="John Clary: Software Developer in Austin, TX"
+    />
+    <meta property="og:description" content="John Clary's website" />
+    <meta property="og:image" content="" />
 
     <!-- Twitter Meta Tags -->
-    <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="John Clary: Software Developer in Austin, TX">
-    <meta name="twitter:description" content="John Clary's website">
-    <meta name="twitter:image" content="">
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta
+      name="twitter:title"
+      content="John Clary: Software Developer in Austin, TX"
+    />
+    <meta name="twitter:description" content="John Clary's website" />
+    <meta name="twitter:image" content="" />
 
     <!-- Meta Tags Generated via http://heymeta.com -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@700&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preconnect" href="https://fonts.bunny.net" />
+    <link
+      href="https://fonts.bunny.net/css?family=sumana:400,700"
+      rel="stylesheet"
+    />
+    <link rel="preconnect" href="https://fonts.bunny.net" />
+    <link
+      href="https://fonts.bunny.net/css?family=sometype-mono:700|sumana:400,700"
+      rel="stylesheet"
+    />
     <style>
       html {
-        font-family: 'Quicksand', sans-serif;
+        font-family: "Sometype Mono", monospace;
+        /* font-family: 'Sumana', serif; */
       }
 
       body {
         margin: 0;
+        padding: 0;
         height: 100vh;
-        background-color: #19192e;
+        background-color: #028d42;
         overflow: hidden;
       }
       header {
@@ -46,8 +66,24 @@
         left: 20%;
         z-index: 1;
       }
+
+      .text-half {
+        top: 0px;
+        bottom: 0px;
+        position: fixed;
+        background-color: rgba(2, 141, 66, 1);
+        width: 30%;
+        color: white;
+        /* padding: 10px; */
+        z-index: 5;
+        padding-top: 200px;
+        padding-left: 100px;
+        padding-right: 0px;
+      }
+
       .title {
-        color: rgb(255, 0, 191);
+        /* color: rgb(255, 0, 191); */
+        color: rgb(255, 255, 255);
       }
       @media screen and (max-width: 768px) {
         .title {
@@ -63,23 +99,30 @@
       nav {
         font-size: 1.5rem;
         color: #fff;
+        padding-bottom: 10px;
       }
       canvas {
+        position: fixed;
         height: "100%";
         width: "100%";
+        /* top: -200px; */
+        /* left: 800px; */
         z-index: 3;
       }
     </style>
   </head>
   <body>
-    <header id="header">
-      <span class="title">JOHN CLARY</span><br />
-      <nav>
-        Github | LinkedIn
-    </header>
+    <div class="text-half">
+      <span class="title">JOHN CLARY</span>
+      <nav>Github | LinkedIn</nav>
+      <span
+        >Civic technologist with deep roots in transportation data, geospatial
+        systems, and open government.</span
+      >
+    </div>
     <canvas id="canvas"></canvas>
   </body>
   <script src="https://d3js.org/d3.v7.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@turf/turf@6/turf.min.js"></script>
-  <script src="starfield.js"></script>
+  <script src="map.js"></script>
 </html>
