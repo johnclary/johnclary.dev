@@ -17,16 +17,13 @@ canvas {
 }
 
 li {
-    padding-bottom: 10px;
+  padding-bottom: 10px;
 }
 
 .content {
   position: relative;
-  /* background-color: rgba(2, 136, 64, 1); */
-  width: 500px;
   z-index: 5;
   padding: 10px;
-  margin-left: 90px;
   background-color: #028840;
 }
 
@@ -67,9 +64,6 @@ a {
   canvas {
     display: none;
   }
-  .content {
-    width: 90%;
-  }
 }
 
 @media screen and (min-width: 769px) {
@@ -78,5 +72,8 @@ a {
     margin-top: 10px;
     margin-bottom: 0px;
   }
-  
+  .content {
+    width: 500px;
+    margin-left: 90px;
+  }
 }
