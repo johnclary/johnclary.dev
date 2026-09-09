@@ -5,7 +5,7 @@ html {
 body {
   margin: 0;
   padding: 0;
-  background-color: #028840;
+  background-color: #027336;
   color: #fff;
 }
 
@@ -20,11 +20,16 @@ li {
   padding-bottom: 10px;
 }
 
+nav {
+  font-size: larger;
+  font-weight: bolder;
+}
+
 .content {
   position: relative;
   z-index: 5;
   padding: 10px;
-  background-color: #028840;
+  background-color: #027336;
 }
 
 .hero {
@@ -38,7 +43,7 @@ li {
   position: sticky;
   top: 0;
   z-index: 2;
-  background-color: #028840;
+  background-color: #027336;
 }
 
 section {
@@ -53,8 +58,8 @@ a:focus {
 }
 
 a {
-  color: #ffcf40;
-  text-decoration-color: #ffcf40;
+  color: #fed7fb;
+  text-decoration-color: #fed7fb;
 }
 
 @media screen and (max-width: 768px) {
