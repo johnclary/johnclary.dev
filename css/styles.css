@@ -46,6 +46,18 @@ nav {
   background-color: #027336;
 }
 
+.entry-item:not(:last-child) {
+  border-bottom: 1px dotted white;
+  margin-bottom: 16px;
+}
+
+.resume-entry h3 {
+  margin: 0;
+  font-size: 1.2em;
+  font-weight: bold;
+  line-height: 1.2;
+}
+
 section {
   scroll-margin-top: 80px;
   margin-bottom: 100px;
